@@ -13,7 +13,6 @@ const filter = ref<'all' | 'active' | 'completed'>('all')
 
 const toast = useToast()
 
-/* ---------------- ADD TODO ---------------- */
 const addTodo = () => {
   if (!newTodo.value.trim()) return
 
@@ -26,18 +25,22 @@ const addTodo = () => {
   toast.add({
     title: 'Task Added 🎉',
     description: newTodo.value,
-    color: 'green'
+    color: 'success'
   })
 
   newTodo.value = ''
 }
 
-/* ---------------- DELETE ---------------- */
 const removeTodo = (id: number) => {
   todos.value = todos.value.filter(t => t.id !== id)
+
+  toast.add({
+    title: 'Task Deleted',
+    color: 'error'
+  })
 }
 
-/* ---------------- FILTER ---------------- */
+
 const filteredTodos = computed(() => {
   if (filter.value === 'active')
     return todos.value.filter(t => !t.completed)
@@ -48,38 +51,51 @@ const filteredTodos = computed(() => {
   return todos.value
 })
 
-/* ---------------- PROGRESS ---------------- */
+
 const progress = computed(() => {
   if (!todos.value.length) return 0
+
   const completed = todos.value.filter(t => t.completed).length
-  return Math.round((completed / todos.value.length) * 100)
+
+  return Math.min(
+    100,
+    Math.round((completed / todos.value.length) * 100)
+  )
 })
 
-/* ---------------- LOCAL STORAGE ---------------- */
+
 onMounted(() => {
-  const saved = localStorage.getItem('todos')
-  if (saved) todos.value = JSON.parse(saved)
+  if (process.client) {
+    const saved = localStorage.getItem('todos')
+    if (saved) {
+      todos.value = JSON.parse(saved)
+    }
+  }
 })
 
-watch(todos, (val) => {
-  localStorage.setItem('todos', JSON.stringify(val))
-}, { deep: true })
+watch(
+  todos,
+  (val) => {
+    if (process.client) {
+      localStorage.setItem('todos', JSON.stringify(val))
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <template>
   <UContainer class="max-w-2xl py-10">
-    <UCard class="transition-colors">
-      
+    <UCard>
+
+ 
       <template #header>
         <div class="flex justify-between items-center">
-          <h1 class="text-2xl font-bold">📝 Smart Todo</h1>
-          
-          <!-- Dark Mode Toggle -->
+          <h1 class="text-2xl font-bold">📝TodoApp</h1>
           <ThemeToggle />
         </div>
       </template>
 
-      <!-- ADD -->
       <div class="flex gap-2 mb-6">
         <UInput
           v-model="newTodo"
@@ -89,27 +105,22 @@ watch(todos, (val) => {
         <UButton @click="addTodo">Add</UButton>
       </div>
 
-      <!-- FILTER -->
+    
       <div class="flex gap-2 mb-6">
         <UButton
-          v-for="type in ['all','active','completed']"
+          v-for="type in ['all','active','completed'] as const"
           :key="type"
-          :variant="filter === type ? 'solid' : 'outline'"
+          :variant="filter === type ? 'solid' : 'soft'"
           @click="filter = type"
         >
           {{ type }}
         </UButton>
       </div>
 
-      <!-- PROGRESS BAR -->
-      <div class="mb-6">
-        <UProgress :value="progress" />
-        <p class="text-sm mt-2 text-gray-500">
-          {{ progress }}% completed
-        </p>
-      </div>
-
-      <!-- LIST -->
+   
+<div class="mb-6">
+  <AppProgress :value="progress" />
+</div>
       <div v-if="filteredTodos.length === 0" class="text-center text-gray-400 py-6">
         No tasks here 👀
       </div>
@@ -118,14 +129,12 @@ watch(todos, (val) => {
         <UCard
           v-for="todo in filteredTodos"
           :key="todo.id"
-          :class="{ 'opacity-60': todo.completed }"
-        >
+          :class="{ 'opacity-60': todo.completed }">
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-3">
               <UCheckbox v-model="todo.completed" />
               <span
                 :class="[
-                  'transition-colors',
                   todo.completed
                     ? 'line-through text-gray-400'
                     : 'text-gray-800 dark:text-gray-200'
@@ -137,7 +146,7 @@ watch(todos, (val) => {
 
             <UButton
               icon="i-heroicons-trash"
-              color="red"
+              color="error"
               variant="ghost"
               @click="removeTodo(todo.id)"
             />
