@@ -1,19 +1,17 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  ssr: false, // 👈 IMPORTANT (SPA mode)
+
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui'
   ],
 
   devtools: {
-    enabled:false
+    enabled: false
   },
 
   css: ['~/assets/css/main.css'],
-
-  routeRules: {
-    '/': { prerender: true }
-  },
 
   compatibilityDate: '2025-01-15',
 
