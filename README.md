@@ -80,7 +80,8 @@ npm run preview
 ---
 
 ## 👩‍💻 Author
+Rani Singh
 
 Built with ❤️ using Nuxt 3.
 
-MIT License
+
